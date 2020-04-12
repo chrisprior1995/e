@@ -20,7 +20,7 @@
         <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
         <script>
             /** CONFIG **/
-            var SIGNALING_SERVER = "http://localhost";
+            var SIGNALING_SERVER = window.location.hostname === 'localhost' ? "http://127.0.0.1:8080" : window.location.hostname;
             var USE_AUDIO = true;
             var USE_VIDEO = true;
             var DEFAULT_CHANNEL = 'some-global-channel-name';
