@@ -261,9 +261,8 @@
                     function(stream) { /* user accepted access to a/v */
                         console.log("Access granted to audio/video");
                         local_media_stream = stream;
-                        var local_media = USE_VIDEO ? $("<video>") : $("<audio>");
+                        var local_media = USE_VIDEO ? $("<video muted>") : $("<audio muted>");
                         local_media.attr("autoplay", "autoplay");
-                        local_media.attr("muted", true); /* always mute ourselves by default */
                         local_media.attr("controls", "");
                         $('body').append(local_media);
                         attachMediaStream(local_media[0], stream);
