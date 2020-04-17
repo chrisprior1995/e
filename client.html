@@ -274,8 +274,7 @@
 
                 function a(stream) { /* user accepted access to a/v */
                     local_media_stream = stream;
-                    const local_media = USE_VIDEO ? $("<video muted>") : $("<audio muted>");
-                    local_media.attr("autoplay", "autoplay");
+                    const local_media = USE_VIDEO ? $("<video muted autoplay playsinline>") : $("<audio muted>");
                     local_media.attr("controls", false);
                     $('.container').append(local_media);
                     local_media[0].srcObject = stream;
