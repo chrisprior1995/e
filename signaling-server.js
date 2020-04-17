@@ -1,47 +1,22 @@
-/**************/
-/*** CONFIG ***/
-/**************/
-var PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
 
+const express = require('express');
+const http = require('http');
+const main = express();
+const server = http.createServer(main);
+const io  = require('socket.io').listen(server);
 
-/*************/
-/*** SETUP ***/
-/*************/
-var express = require('express');
-var http = require('http');
-var bodyParser = require('body-parser')
-var main = express()
-var server = http.createServer(main)
-var io  = require('socket.io').listen(server);
-//io.set('log level', 2);
 
 server.listen(PORT, null, function() {
     console.log("Listening on port " + PORT);
 });
-//main.use(express.bodyParser());
 
 main.get('/', function(req, res){ res.sendFile(__dirname + '/client.html'); });
-// main.get('/index.html', function(req, res){ res.sendfile('newclient.html'); });
-// main.get('/client.html', function(req, res){ res.sendfile('newclient.html'); });
+
+let channels = {};
+let sockets = {};
 
 
-
-/*************************/
-/*** INTERESTING STUFF ***/
-/*************************/
-var channels = {};
-var sockets = {};
-
-/**
- * Users will connect to the signaling server, after which they'll issue a "join"
- * to join a particular channel. The signaling server keeps track of all sockets
- * who are in a channel, and on join will send out 'addPeer' events to each pair
- * of users in a channel. When clients receive the 'addPeer' even they'll begin
- * setting up an RTCPeerConnection with one another. During this process they'll
- * need to relay ICECandidate information to one another, as well as SessionDescription
- * information. After all of that happens, they'll finally be able to complete
- * the peer connection and will be streaming audio/video between eachother.
- */
 io.sockets.on('connection', function (socket) {
     socket.channels = {};
     sockets[socket.id] = socket;
@@ -58,8 +33,8 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('join', function (config) {
         console.log("["+ socket.id + "] join ", config);
-        var channel = config.channel;
-        var userdata = config.userdata;
+        const channel = config.channel;
+        const userdata = config.userdata;
 
         if (channel in socket.channels) {
             console.log("["+ socket.id + "] ERROR: already joined ", channel);
@@ -98,8 +73,8 @@ io.sockets.on('connection', function (socket) {
     socket.on('part', part);
 
     socket.on('relayICECandidate', function(config) {
-        var peer_id = config.peer_id;
-        var ice_candidate = config.ice_candidate;
+        const peer_id = config.peer_id;
+        const ice_candidate = config.ice_candidate;
         console.log("["+ socket.id + "] relaying ICE candidate to [" + peer_id + "] ", ice_candidate);
 
         if (peer_id in sockets) {
@@ -108,8 +83,8 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('relaySessionDescription', function(config) {
-        var peer_id = config.peer_id;
-        var session_description = config.session_description;
+        const peer_id = config.peer_id;
+        const session_description = config.session_description;
         console.log("["+ socket.id + "] relaying session description to [" + peer_id + "] ", session_description);
 
         if (peer_id in sockets) {
