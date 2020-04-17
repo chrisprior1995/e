@@ -6,31 +6,34 @@
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <style>
         html, body {
-            background-color: #333;
-        }
-
-        .container {
             height: 100%;
             width: 100%;
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            align-items: center;
+            background-color: #333;
         }
+.container {
+    justify-content: center;
+    height: 100%;
+            width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-content: stretch;
+    background-color: pink;
+}
 
-        * {
-            margin: 0;
-            padding: 0;
-        }
+video {
+    height: 100%;
+    width: 100%;
+}
 
-        video {
-            background-color: aquamarine;
-            padding: 2.5%;
-            min-width: 25%;
-            height: auto;
-            max-width: 45%;
-            flex: 1 1 auto;
-        }
+.box {
+    position: relative;
+    max-height: 50%;
+    min-width: 20%;
+    max-width: 50%;
+    flex-grow:1;
+}
+
     </style>
 
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
@@ -120,7 +123,8 @@
                     const remote_media = USE_VIDEO ? $("<video autoplay playsinline>") : $("<audio>");
                     remote_media.attr("controls", false);
                     peer_media_elements[peer_id] = remote_media;
-                    $('.container').append(remote_media);
+                    const box = $("<div class='box'></div>").append(remote_media);
+                    $('.container').append(box);
                     remote_media[0].srcObject = event.stream;
                 };
 
@@ -224,7 +228,8 @@
                 local_media_stream = stream;
                 const local_media = USE_VIDEO ? $("<video muted autoplay playsinline>") : $("<audio muted>");
                 local_media.attr("controls", false);
-                $('.container').append(local_media);
+                const box = $("<div class='box'></div>").append(local_media);
+                $('.container').append(box);
                 local_media[0].srcObject = stream;
 
                 if (callback) callback();
