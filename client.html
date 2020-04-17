@@ -2,10 +2,7 @@
 <html>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <!-- This adapter.js file de-prefixes the webkit* and moz* prefixed RTC
-         methods. When RTC becomes a more solid standard, this adapter should no
-         longer be necessary. -->
-     <script src="https://webrtc.googlecode.com/svn/trunk/samples/js/base/adapter.js"></script>
+     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <style>
         html, body {
             background-color: #333;
@@ -31,6 +28,7 @@
             min-width: 25%;
             height: auto;
             max-width: 45%;
+            flex: 1 1 auto;
         }
 
 
@@ -269,12 +267,11 @@
             console.log("Requesting access to local audio / video inputs");
 
 
-            navigator.getUserMedia = (navigator.getUserMedia ||
-                navigator.webkitGetUserMedia ||
-                navigator.mozGetUserMedia ||
-                navigator.msGetUserMedia);
 
-            navigator.getUserMedia({"audio": USE_AUDIO, "video": USE_VIDEO},
+
+            navigator.mediaDevices.getUserMedia(({"audio": USE_AUDIO, "video": USE_VIDEO}).then(a).catch(b);
+
+
                 function a(stream) { /* user accepted access to a/v */
                     local_media_stream = stream;
                     const local_media = USE_VIDEO ? $("<video muted>") : $("<audio muted>");
@@ -286,13 +283,15 @@
 
                     if (callback) callback();
                 },
-                function () { /* user denied access to a/v */
+                function b() { /* user denied access to a/v */
                     console.log("Access denied for audio/video");
                     alert("You chose not to provide access to the camera/microphone, demo will not work.");
                     if (errorback) errorback();
-                });
+                };
         }
     </script>
+
+
 </head>
 <body onload='init()'>
 <div class="container">
