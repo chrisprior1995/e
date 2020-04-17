@@ -2,7 +2,7 @@
 <html>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <style>
         html, body {
             background-color: #333;
@@ -30,11 +30,6 @@
             max-width: 45%;
             flex: 1 1 auto;
         }
-
-
-        .slider .slide img {
-
-        }
     </style>
 
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
@@ -45,8 +40,6 @@
         const USE_VIDEO = true;
         const DEFAULT_CHANNEL = 'some-global-channel-name';
 
-        /** You should probably use a different stun server doing commercial stuff **/
-        /** Also see: https://gist.github.com/zziuni/3741933 **/
         const ICE_SERVERS = [
             {url: "stun:stun.l.google.com:19302"}
         ];
@@ -62,7 +55,6 @@
         function init() {
             console.log("Connecting to signaling server");
             signaling_socket = io(SIGNALING_SERVER);
-            signaling_socket = io();
 
             signaling_socket.on('connect', function () {
                 console.log("Connected to signaling server");
@@ -112,9 +104,7 @@
                 }
                 const peer_connection = new RTCPeerConnection(
                     {"iceServers": ICE_SERVERS},
-                    {"optional": [{"DtlsSrtpKeyAgreement": true}]} /* this will no longer be needed by chrome
-                                                                        * eventually (supposedly), but is necessary 
-                                                                        * for now to get firefox to talk to chrome */
+                    {"optional": [{"DtlsSrtpKeyAgreement": true}]}
                 );
                 peers[peer_id] = peer_connection;
 
@@ -261,31 +251,26 @@
                 if (callback) callback();
                 return;
             }
-            /* Ask user for permission to use the computers microphone and/or camera,
-             * attach it to an <audio> or <video> tag if they give us access. */
             console.log("Requesting access to local audio / video inputs");
-
-
-
 
             navigator.mediaDevices.getUserMedia({"audio": USE_AUDIO, "video": USE_VIDEO}).then(a).catch(b);
 
 
-                function a(stream) { /* user accepted access to a/v */
-                    local_media_stream = stream;
-                    const local_media = USE_VIDEO ? $("<video muted autoplay playsinline>") : $("<audio muted>");
-                    local_media.attr("controls", false);
-                    $('.container').append(local_media);
-                    local_media[0].srcObject = stream;
+            function a(stream) { /* user accepted access to a/v */
+                local_media_stream = stream;
+                const local_media = USE_VIDEO ? $("<video muted autoplay playsinline>") : $("<audio muted>");
+                local_media.attr("controls", false);
+                $('.container').append(local_media);
+                local_media[0].srcObject = stream;
 
+                if (callback) callback();
+            }
 
-                    if (callback) callback();
-                }
-                function b() { /* user denied access to a/v */
-                    console.log("Access denied for audio/video");
-                    alert("You chose not to provide access to the camera/microphone, demo will not work.");
-                    if (errorback) errorback();
-                }
+            function b() { /* user denied access to a/v */
+                console.log("Access denied for audio/video");
+                alert("You chose not to provide access to the camera/microphone, demo will not work.");
+                if (errorback) errorback();
+            }
         }
     </script>
 
