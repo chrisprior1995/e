@@ -1,3 +1,5 @@
+const path = require('path');
+
 const PORT = process.env.PORT || 8080;
 
 const express = require('express');
@@ -11,7 +13,11 @@ server.listen(PORT, null, function() {
     console.log("Listening on port " + PORT);
 });
 
-main.get('/', function(req, res){ res.sendFile(__dirname + '/client.html'); });
+main.use(express.static(path.join(__dirname, './app/public')));
+
+main.get('/', function(req, res){
+    res.sendFile(__dirname + '/app/public' + '/index.html');
+});
 
 let channels = {};
 let sockets = {};

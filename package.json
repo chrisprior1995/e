@@ -1,13 +1,46 @@
 {
-  "name": "",
-  "version": "",
-  "description": "About =====",
-  "scripts": {
-    "start": "node signaling-server"
-  },
+  "name": "app",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://localhost:8080",
   "dependencies": {
     "body-parser": "^1.15.2",
+    "bootstrap": "^3.3.5",
+    "bootstrap-sass": "^3.3.7",
+    "expand-tilde": "2.0.2",
     "express": "^4.14.0",
-    "socket.io": "^1.4.8"
+    "extract-text-webpack-plugin": "4.0.0-alpha.0",
+    "selenium-server": "2.53.0",
+    "socket.io": "^1.4.8",
+    "socket.io-client": "^2.3.0",
+    "vue": "^2.3.4",
+    "vue-loader": "^15.9.2",
+    "vue-resource": "^1.3.4",
+    "vue-router": "^2.6.0",
+    "vue-strap": "1.1.37",
+    "vue-template-compiler": "^2.6.11",
+    "vuejs-datepicker": "^0.8.4"
+  },
+  "scripts": {
+    "start": "node signaling-server",
+    "start:front": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

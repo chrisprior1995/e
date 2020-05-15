@@ -1,117 +1,58 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <title>Group chat</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <style>
-        html, body {
-            height: 100%;
-            width: 100%;
-            background-color: #333;
-        }
-.container {
-    justify-content: center;
-    height: 100%;
-            width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    align-content: stretch;
-    background-color: pink;
-}
+<template>
+    <div id="app">
+        <video :srcObject.prop="local_media_stream" autoplay muted/>
+        <video v-for="peer in peer_media_elements" :srcObject.prop="peer"/>
+    </div>
+</template>
 
-video {
-    height: 100%;
-    width: 100%;
-}
+<script>
+    import io from 'socket.io-client';
 
-.box {
-    position: relative;
-    max-height: 50%;
-    min-width: 20%;
-    max-width: 50%;
-    flex-grow:1;
-}
+    export default {
+        name: 'index',
+        // components: {
+        //     appHeader,
+        // },
 
-    </style>
+        data() {
+            return {
+                signaling_peer: window.location.hostname === 'localhost' ? "http://127.0.0.1:8080" : window.location.hostname,
+                local_media_stream: null,
+                USE_AUDIO: true,
+                USE_VIDEO: true,
+                DEFAULT_CHANNEL: 'a',
+                ICE_SERVERS: [
+                    {url: "stun:stun.l.google.com:19302"}
+                ],
+                peers: {},
+                peer_media_elements: {}
+            }
+        },
 
-    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-    <script>
-        /** CONFIG **/
-        const SIGNALING_SERVER = window.location.hostname === 'localhost' ? "http://127.0.0.1:8080" : window.location.hostname;
-        let USE_AUDIO = true;
-        let USE_VIDEO = true;
-        const DEFAULT_CHANNEL = 'a';
+        beforeCreate() {
+            const signaling_socket = io(this.signaling_peer);
 
-        const ICE_SERVERS = [
-            {url: "stun:stun.l.google.com:19302"}
-        ];
-
-
-
-    </script>
-
-
-    <script>
-        let signaling_socket = null;
-        let local_media_stream = null;
-        let peers = {};                /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
-        let peer_media_elements = {};  /* keep track of our <video>/<audio> tags, indexed by peer_id */
-
-
-
-        function changeAudio() {
-            USE_AUDIO = !USE_AUDIO
-            local_media_stream.getAudioTracks()[0].enabled = USE_AUDIO;
-            $("#mute").html(USE_AUDIO ? 'mute' : 'unmute');
-        }
-
-        function changeVideo() {
-            USE_VIDEO = !USE_VIDEO
-            local_media_stream.getVideoTracks()[0].enabled = USE_VIDEO;
-        }
-
-        function init() {
-            console.log("Connecting to signaling server");
-            signaling_socket = io(SIGNALING_SERVER);
-
-            signaling_socket.on('connect', function () {
+            signaling_socket.on('connect', () => {
                 console.log("Connected to signaling server");
-                setup_local_media(function () {
-                    /* once the user has given us access to their
-                     * microphone/camcorder, join the channel and start peering up */
-                    join_chat_channel(DEFAULT_CHANNEL, {'whatever-you-want-here': 'stuff'});
+                this.setup_local_media(() => {
+                    this.join_chat_channel(this.DEFAULT_CHANNEL, {'whatever-you-want-here': 'stuff'});
                 });
             });
-            signaling_socket.on('disconnect', function () {
+            signaling_socket.on('disconnect', () => {
                 console.log("Disconnected from signaling server");
-                /* Tear down all of our peer connections and remove all the
-                 * media divs when we disconnect */
-                for (peer_id in peer_media_elements) {
-                    peer_media_elements[peer_id].remove();
-                }
-                for (peer_id in peers) {
-                    peers[peer_id].close();
+                for (peer_id in this.peers) {
+                    this.peers[peer_id].close();
                 }
 
-                peers = {};
-                peer_media_elements = {};
+                this.peers = {};
+                this.peer_media_elements = {};
             });
-
-            function join_chat_channel(channel, userdata) {
-                signaling_socket.emit('join', {"channel": channel, "userdata": userdata});
-            }
-
-            function part_chat_channel(channel) {
-                signaling_socket.emit('part', channel);
-            }
 
 
             signaling_socket.on('addPeer', function (config) {
                 console.log('Signaling server said to add peer:', config);
                 const peer_id = config.peer_id;
-                if (peer_id in peers) {
+                if (peer_id in this.peers) {
                     console.log("Already connected to peer ", peer_id);
                     return;
                 }
@@ -120,11 +61,11 @@ video {
                     {"optional": [{"DtlsSrtpKeyAgreement": true}]}
                 );
 
-                peers[peer_id] = peer_connection;
+                this.peers[peer_id] = peer_connection;
 
                 peer_connection.onicecandidate = function (event) {
                     if (event.candidate) {
-                        const { sdpMLineIndex, candidate } = event.candidate;
+                        const {sdpMLineIndex, candidate} = event.candidate;
                         signaling_socket.emit('relayICECandidate', {
                             peer_id,
                             ice_candidate: {
@@ -135,16 +76,12 @@ video {
                     }
                 };
                 peer_connection.onaddstream = function (event) {
-                    console.log("onAddStream", event);
                     const remote_media = USE_VIDEO ? $("<video autoplay playsinline>") : $("<audio>");
                     remote_media.attr("controls", false);
-                    peer_media_elements[peer_id] = remote_media;
-                    const box = $("<div class='box'></div>").append(remote_media);
-                    $('.container').append(box);
-                    remote_media[0].srcObject = event.stream;
+                    this.peer_media_elements[peer_id] = event.stream;
                 };
 
-                peer_connection.addStream(local_media_stream);
+                peer_connection.addStream(this.local_media_stream);
 
 
                 if (config.should_create_offer) {
@@ -172,7 +109,7 @@ video {
             signaling_socket.on('sessionDescription', function (config) {
                 console.log('Remote description received: ', config);
                 const peer_id = config.peer_id;
-                const peer = peers[peer_id];
+                const peer = this.peers[peer_id];
                 const remote_description = config.session_description;
                 console.log(config.session_description);
 
@@ -211,7 +148,7 @@ video {
 
 
             signaling_socket.on('iceCandidate', function (config) {
-                const peer = peers[config.peer_id];
+                const peer = this.peers[config.peer_id];
                 const ice_candidate = config.ice_candidate;
                 peer.addIceCandidate(new RTCIceCandidate(ice_candidate));
             });
@@ -220,55 +157,51 @@ video {
             signaling_socket.on('removePeer', function (config) {
                 console.log('Signaling server said to remove peer:', config);
                 const peer_id = config.peer_id;
-                if (peer_id in peer_media_elements) {
-                    peer_media_elements[peer_id].remove();
-                }
-                if (peer_id in peers) {
-                    peers[peer_id].close();
+
+                if (peer_id in this.peers) {
+                    this.peers[peer_id].close();
                 }
 
-                delete peers[peer_id];
-                delete peer_media_elements[config.peer_id];
+                delete this.peers[peer_id];
+                delete this.peer_media_elements[config.peer_id];
             });
-        }
+        },
 
-        function setup_local_media(callback, errorback) {
-            if (local_media_stream != null) {
-                if (callback) callback();
-                return;
-            }
-
-            navigator.mediaDevices.getUserMedia({"audio": USE_AUDIO, "video": USE_VIDEO}).then(a).catch(b);
-
-            function a(stream) {
-                local_media_stream = stream;
-                const local_media = USE_VIDEO ? $("<video muted autoplay playsinline>") : $("<audio muted>");
-                local_media.attr("controls", false);
-                const box = $("<div class='box'></div>").append(local_media);
-                $('.container').append(box);
-                local_media[0].srcObject = stream;
-
-
-                console.log(stream.getTracks())
-
-                if (callback) callback();
-            }
-
-            function b() { /* user denied access to a/v */
+        methods: {
+            a(stream) {
+                this.local_media_stream = stream;
+                console.log('a', this.local_media_stream)
+            },
+            b() {
                 console.log("Access denied for audio/video");
                 console.error("You chose not to provide access to the camera/microphone, demo will not work.");
-                if (errorback) errorback();
-            }
-        }
-    </script>
+            },
+            setup_local_media(callback) {
+                if (this.local_media_stream != null) {
+                    if (callback) callback();
+                    return;
+                }
+                console.log('b', this.local_media_stream)
+                navigator.mediaDevices.getUserMedia({
+                    "audio": this.USE_AUDIO,
+                    "video": this.USE_VIDEO
+                }).then(this.a).catch(this.b);
+            },
+            join_chat_channel(channel, userdata) {
+                signaling_socket.emit('join', {"channel": channel, "userdata": userdata});
+            },
+            part_chat_channel(channel) {
+                signaling_socket.emit('part', channel);
+            },
 
-</head>
-<body onload='init()'>
-<div id="items" style="position: absolute; top: 0; left: 0;">
-    <button id="mute" onclick="changeAudio()">mute</button>
-    <button onclick="changeVideo()">video on/off</button>
-</div>
-<div class="container">
-</div>
-</body>
-</html>
+            changeAudio() {
+                this.USE_AUDIO = !this.USE_AUDIO
+                this.local_media_stream.getAudioTracks()[0].enabled = this.USE_AUDIO;
+            },
+            changeVideo() {
+                this.USE_VIDEO = !this.USE_VIDEO
+                this.local_media_stream.getVideoTracks()[0].enabled = this.USE_VIDEO;
+            },
+        }
+    };
+</script>
